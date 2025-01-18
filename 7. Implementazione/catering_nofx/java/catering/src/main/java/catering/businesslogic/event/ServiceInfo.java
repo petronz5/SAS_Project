@@ -38,6 +38,10 @@ public class ServiceInfo implements EventItemInfo {
         this.referredEvent = event;
     }
 
+    public int getDiners(){
+        return this.participants;   // Restituisce il numero di partecipani al servizio
+    }
+
     public String toString() {
         return name + ": " + date + " (" + timeStart + "-" + timeEnd + "), " + participants + " pp.";
     }

@@ -1,5 +1,7 @@
 package catering.businesslogic.kitchen;
 
+import catering.businesslogic.CatERing;
+import catering.businesslogic.UseCaseLogicException;
 import catering.businesslogic.event.EventInfo;
 import catering.businesslogic.event.ServiceInfo;
 import catering.businesslogic.recipe.Recipe;
@@ -38,6 +40,7 @@ public class SummarySheet {
 
     public Task addTask(Recipe recipe) {
         Task task = new Task(recipe);
+        task.setSummarySheetId(this.id);
         this.myTasks.add(task);
         return task;
     }
@@ -92,4 +95,19 @@ public class SummarySheet {
         sheet.myTasks = Task.loadTasksForSheet(sheet.id);
         return sheet;
     }
+
+
+    public static SummarySheet loadSummarySheetById(int sheetId){
+        SummarySheet sheet = new SummarySheet();
+        String query = "SELECT * FROM catering.SummarySheets WHERE id = " + sheetId;
+        PersistenceManager.executeQuery(query, rs -> {
+            sheet.id = rs.getInt("id");
+        });
+
+        sheet.myTasks = Task.loadTasksForSheet(sheet.id);
+        return sheet;
+    }
+
+
+
 }

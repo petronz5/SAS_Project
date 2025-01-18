@@ -3,6 +3,8 @@ package catering.persistence;
 import catering.businesslogic.kitchen.SummarySheet;
 import catering.businesslogic.kitchen.Task;
 import catering.businesslogic.kitchen.TaskEventReceiver;
+import catering.businesslogic.turns.Cook;
+import catering.businesslogic.turns.Turn;
 
 public class TaskPersistence implements TaskEventReceiver {
     @Override
@@ -36,7 +38,7 @@ public class TaskPersistence implements TaskEventReceiver {
     }
 
     @Override
-    public void updateAssignTask(Task task) {
-        Task.saveAssignedTask(task);
+    public void updateAssignTask(Task task, Turn turn, Cook cook, String quantity, int time, int portions) {
+        Task.saveAssignedTask(task, turn, cook, quantity, time, portions);
     }
 }

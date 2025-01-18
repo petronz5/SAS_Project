@@ -39,6 +39,11 @@ public class TaskManager {
     }
 
     public Task addTask(Recipe recipe) throws UseCaseLogicException {
+
+        if(!CatERing.getInstance().getUserManager().getCurrentUser().isChef()){
+            throw new UseCaseLogicException();
+        }
+
         if (currentSummarySheet == null) {
             throw new UseCaseLogicException();
         }
@@ -69,7 +74,7 @@ public class TaskManager {
             throw new UseCaseLogicException();
         }
         Task assignedTask = currentSummarySheet.assignTask(task, turn, cook, quantity, time, portions);
-        this.notifyTaskAssigned(assignedTask);
+        this.notifyTaskAssigned(assignedTask, turn, cook, quantity, time, portions);
         return assignedTask;
     }
 
@@ -112,9 +117,10 @@ public class TaskManager {
         }
     }
 
-    private void notifyTaskAssigned(Task task) {
+    private void notifyTaskAssigned(Task task, Turn turn, Cook cook, String quantity, int time, int portions) {
         for (TaskEventReceiver receiver : eventReceivers) {
-            receiver.updateAssignTask(task);
+            receiver.updateAssignTask(task, turn, cook, quantity, time, portions);
         }
     }
+
 }

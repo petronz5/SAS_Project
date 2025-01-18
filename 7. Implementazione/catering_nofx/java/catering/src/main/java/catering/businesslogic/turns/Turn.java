@@ -1,10 +1,14 @@
 package catering.businesslogic.turns;
 
+import catering.persistence.PersistenceManager;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Turn {
+    private int id;
     private Date expirationDate;
     private String preparationPlace;
     private Time startTime;
@@ -26,6 +30,14 @@ public class Turn {
         this.currentStaff = currentStaff;
         this.endDate = endDate;
         this.involvedCooks = new ArrayList<>();
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public Date getExpirationDate() {
@@ -119,6 +131,30 @@ public class Turn {
         this.expirationDate = expirationDate;
         this.endDate = endDate;
     }
+
+    public static Turn loadTurnById(int turnId) {
+        AtomicReference<Turn> turnRef = new AtomicReference<>(null);
+        String query = "SELECT * FROM catering.Turns WHERE id = " + turnId;
+
+        PersistenceManager.executeQuery(query, rs -> {
+            // NON serve if (rs.next()). Siamo già dentro un while esterno
+            Turn t = new Turn(
+                    rs.getDate("expiration_date"),
+                    rs.getString("preparation_place"),
+                    rs.getTime("start_time"),
+                    rs.getTime("end_time"),
+                    rs.getBoolean("recurrence"),
+                    rs.getInt("staff_limit"),
+                    rs.getInt("current_staff"),
+                    rs.getDate("end_date")
+            );
+            t.setId(rs.getInt("id"));
+            turnRef.set(t);
+        });
+
+        return turnRef.get();
+    }
+
 
     @Override
     public String toString() {
