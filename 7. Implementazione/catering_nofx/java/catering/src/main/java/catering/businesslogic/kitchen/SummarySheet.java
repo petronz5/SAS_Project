@@ -15,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class SummarySheet {
     private int id;
@@ -55,6 +56,52 @@ public class SummarySheet {
     public void deleteAssignment(Task task, Cook cook, Turn turn) {
         this.myTasks.remove(task);
     }
+
+    public void sortPreparations(Map<String, Object> parameters) {
+        // Esempio di criterio di ordinamento basato sul tempo stimato
+        if (parameters.containsKey("sortBy") && parameters.get("sortBy").equals("estimatedTime")) {
+            myTasks.sort((t1, t2) -> Integer.compare(t1.getEstimatedTime(), t2.getEstimatedTime()));
+        }
+        // Puoi aggiungere altri criteri di ordinamento in base ai parametri
+        System.out.println("Preparations sorted based on criteria: " + parameters);
+    }
+
+    public void markPreparationAsCooked(Task task) {
+        if (myTasks.contains(task)) {
+            task.setCompleted(true); // Imposta la Task come completata
+            Task.saveModifiedTask(task); // Salva le modifiche al DB
+            System.out.println("Task marked as cooked: " + task.getId());
+        } else {
+            System.out.println("Task not found in the current SummarySheet.");
+        }
+    }
+
+    public void optimizePreparations() {
+        // Ottimizzazione base: ordina le preparazioni per tempo stimato (ascendente)
+        myTasks.sort((t1, t2) -> Integer.compare(t1.getEstimatedTime(), t2.getEstimatedTime()));
+
+        // Puoi aggiungere logiche di ottimizzazione più avanzate (es. raggruppamento per cuochi, turni, ecc.)
+        System.out.println("Preparations optimized.");
+    }
+
+    public void verifyPreparations() {
+        boolean allValid = true;
+        for (Task task : myTasks) {
+            if (task.getEstimatedTime() <= 0 || task.getPortions() <= 0) {
+                System.out.println("Invalid task found: " + task.getId());
+                allValid = false;
+            }
+        }
+        if (allValid) {
+            System.out.println("All preparations are valid.");
+        } else {
+            System.out.println("Some preparations failed verification.");
+        }
+    }
+
+
+
+
 
     public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer time, Integer portions) {
         // Assign task logic (shift, cook)

@@ -82,6 +82,13 @@ public class Task {
         this.recipe = recipe;
     }
 
+    public Task regCompletedTask() {
+        this.setCompleted(true);
+        Task.saveModifiedTask(this);
+        return this;
+    }
+
+
     // -------------------------------------
     // PERSISTENCE METHODS
     // -------------------------------------

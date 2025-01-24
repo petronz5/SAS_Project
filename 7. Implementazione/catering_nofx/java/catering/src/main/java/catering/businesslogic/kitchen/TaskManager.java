@@ -78,6 +78,22 @@ public class TaskManager {
         return assignedTask;
     }
 
+    public ArrayList<Recipe> viewRecipeBook() {
+        // Otteniamo l'elenco delle ricette
+        return CatERing.getInstance().getRecipeManager().getRecipes();
+    }
+
+    public Task regCompletedTask(Task task) throws UseCaseLogicException {
+        if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
+            throw new UseCaseLogicException();
+        }
+        task.setCompleted(true); // Imposta il completamento della task
+        Task.saveModifiedTask(task); // Salva il cambiamento nel database
+        this.notifyTaskCompleted(task); // Notifica l'evento
+        return task;
+    }
+
+
     public void addEventReceiver(TaskEventReceiver receiver) {
         this.eventReceivers.add(receiver);
     }
@@ -102,6 +118,12 @@ public class TaskManager {
     private void notifyTaskAdded(Task task) {
         for (TaskEventReceiver receiver : eventReceivers) {
             receiver.updateAddedTask(task);
+        }
+    }
+
+    private void notifyTaskCompleted(Task task) {
+        for (TaskEventReceiver receiver : eventReceivers) {
+            receiver.updateRegCompletedTask(task);
         }
     }
 
