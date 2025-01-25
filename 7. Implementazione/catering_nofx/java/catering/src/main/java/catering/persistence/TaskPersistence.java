@@ -13,6 +13,11 @@ public class TaskPersistence implements TaskEventReceiver {
     }
 
     @Override
+    public void updateSummarySheetDeleted(SummarySheet sumSheet) {
+
+    }
+
+    @Override
     public void updateSummarySheetOpened(SummarySheet summarySheet) {
         // Nessuna azione necessaria per l'apertura del foglio riepilogativo
     }

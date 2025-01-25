@@ -27,6 +27,10 @@ public class SummarySheet {
         this.myTasks = new ArrayList<>();
     }
 
+    public int getId() {
+        return id;
+    }
+
     public void setReferredService(ServiceInfo service) {
         this.referredService = service;
     }
@@ -46,12 +50,18 @@ public class SummarySheet {
         return task;
     }
 
-    public Task modifyTask(Task task, String quantity, Integer time, Integer portions) {
+    public Task modifyTask(Task task, Integer portions,  String quantity, Integer time) {
         task.setQuantity(quantity);
         if (time != null) task.setEstimatedTime(time);
         if (portions != null) task.setPortions(portions);
         return task;
     }
+
+    public static void deleteSummarySheet(int sheetId) {
+        String deleteQuery = "DELETE FROM catering.SummarySheets WHERE id = ?";
+        PersistenceManager.executeUpdate(deleteQuery, ps -> ps.setInt(1, sheetId));
+    }
+
 
     public void deleteAssignment(Task task, Cook cook, Turn turn) {
         this.myTasks.remove(task);
@@ -76,34 +86,44 @@ public class SummarySheet {
         }
     }
 
-    public void optimizePreparations() {
-        // Ottimizzazione base: ordina le preparazioni per tempo stimato (ascendente)
-        myTasks.sort((t1, t2) -> Integer.compare(t1.getEstimatedTime(), t2.getEstimatedTime()));
-
-        // Puoi aggiungere logiche di ottimizzazione più avanzate (es. raggruppamento per cuochi, turni, ecc.)
+    public void optimizePreparations(Task task, Cook cook, Turn turn) {
+        if (task != null) {
+            System.out.println("Optimizing specific task: " + task.getId());
+        } else {
+            // Ottimizzazione globale
+            myTasks.sort((t1, t2) -> Integer.compare(t1.getEstimatedTime(), t2.getEstimatedTime()));
+        }
         System.out.println("Preparations optimized.");
     }
 
-    public void verifyPreparations() {
-        boolean allValid = true;
-        for (Task task : myTasks) {
+    public void verifyPreparations(Task task, Cook cook, Turn turn) {
+        if (task != null) {
+            // Verifica di un compito specifico
             if (task.getEstimatedTime() <= 0 || task.getPortions() <= 0) {
                 System.out.println("Invalid task found: " + task.getId());
-                allValid = false;
+            } else {
+                System.out.println("Task is valid: " + task.getId());
             }
-        }
-        if (allValid) {
-            System.out.println("All preparations are valid.");
         } else {
-            System.out.println("Some preparations failed verification.");
+            // Verifica globale
+            boolean allValid = true;
+            for (Task t : myTasks) {
+                if (t.getEstimatedTime() <= 0 || t.getPortions() <= 0) {
+                    System.out.println("Invalid task found: " + t.getId());
+                    allValid = false;
+                }
+            }
+            if (allValid) {
+                System.out.println("All preparations are valid.");
+            } else {
+                System.out.println("Some preparations failed verification.");
+            }
         }
     }
 
 
 
-
-
-    public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer time, Integer portions) {
+    public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer portions, Integer time) {
         // Assign task logic (shift, cook)
         task.setQuantity(quantity);
         task.setEstimatedTime(time);
@@ -130,16 +150,24 @@ public class SummarySheet {
         });
     }
 
-    public static SummarySheet loadSummarySheet(int eventId) {
-        SummarySheet sheet = new SummarySheet();
-        String query = "SELECT * FROM catering.SummarySheets WHERE event_id = " + eventId;
-        PersistenceManager.executeQuery(query, rs -> {
-            sheet.id = rs.getInt("id");
-            // Load other fields if necessary
+    public static SummarySheet loadSummarySheet(ServiceInfo service, EventInfo event) {
+        SummarySheet sheet = null;
+        String query = "SELECT * FROM catering.SummarySheets WHERE service_id = ? AND event_id = ?";
+        PersistenceManager.executeQuery(query, ps -> {
+            ps.setInt(1, service.getId());
+            ps.setInt(2, event.getId());
+        }, rs -> {
+            if (rs.next()) {
+                sheet = new SummarySheet();
+                sheet.id = rs.getInt("id");
+                sheet.referredService = service;
+                sheet.referredEvent = event;
+            }
         });
 
-        // Load tasks
-        sheet.myTasks = Task.loadTasksForSheet(sheet.id);
+        if (sheet != null) {
+            sheet.myTasks = Task.loadTasksForSheet(sheet.id);
+        }
         return sheet;
     }
 
@@ -154,7 +182,5 @@ public class SummarySheet {
         sheet.myTasks = Task.loadTasksForSheet(sheet.id);
         return sheet;
     }
-
-
 
 }

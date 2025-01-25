@@ -31,12 +31,28 @@ public class TaskManager {
         return summarySheet;
     }
 
-    public SummarySheet openSummarySheet(int eventId) {
-        SummarySheet summarySheet = SummarySheet.loadSummarySheet(eventId);
+    public SummarySheet openSummarySheet(ServiceInfo service, EventInfo event) throws UseCaseLogicException {
+        SummarySheet summarySheet = SummarySheet.loadSummarySheet(service, event);
+        if (summarySheet == null) {
+            throw new UseCaseLogicException();
+        }
         this.currentSummarySheet = summarySheet;
         this.notifySummarySheetOpened(summarySheet);
         return summarySheet;
     }
+
+
+    public void deleteSummarySheet(SummarySheet summarySheet) throws UseCaseLogicException {
+        if (summarySheet == null || !summarySheet.getTasks().isEmpty()) {
+            throw new UseCaseLogicException();
+        }
+        SummarySheet.deleteSummarySheet(summarySheet.getId());
+        if (currentSummarySheet == summarySheet) {
+            currentSummarySheet = null;
+        }
+        this.notifySummarySheetDeleted(summarySheet);
+    }
+
 
     public Task addTask(Recipe recipe) throws UseCaseLogicException {
 
@@ -56,7 +72,7 @@ public class TaskManager {
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             throw new UseCaseLogicException();
         }
-        Task modifiedTask = currentSummarySheet.modifyTask(task, quantity, time, portions);
+        Task modifiedTask = currentSummarySheet.modifyTask(task, portions, quantity, time);
         this.notifyTaskModified(modifiedTask);
         return modifiedTask;
     }
@@ -69,12 +85,12 @@ public class TaskManager {
         this.notifyTaskDeleted(task);
     }
 
-    public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer time, Integer portions) throws UseCaseLogicException {
+    public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer portions, Integer time) throws UseCaseLogicException {
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             throw new UseCaseLogicException();
         }
-        Task assignedTask = currentSummarySheet.assignTask(task, turn, cook, quantity, time, portions);
-        this.notifyTaskAssigned(assignedTask, turn, cook, quantity, time, portions);
+        Task assignedTask = currentSummarySheet.assignTask(task, turn, cook, quantity, portions, time);
+        this.notifyTaskAssigned(assignedTask, turn, cook, quantity, portions , time);
         return assignedTask;
     }
 
@@ -92,6 +108,27 @@ public class TaskManager {
         this.notifyTaskCompleted(task); // Notifica l'evento
         return task;
     }
+
+    public void optimizePreparations(Task task, Cook cook, Turn turn) throws UseCaseLogicException {
+        if (currentSummarySheet == null) {
+            throw new UseCaseLogicException();
+        }
+        currentSummarySheet.optimizePreparations(task, cook, turn);
+        this.notifyPreparationsOptimized(task, cook, turn);
+    }
+
+
+
+    public void verifyPreparations(Task task, Cook cook, Turn turn) throws UseCaseLogicException {
+        if (currentSummarySheet == null) {
+            throw new UseCaseLogicException();
+        }
+        currentSummarySheet.verifyPreparations(task, cook, turn);
+        this.notifyPreparationsVerified(task, cook, turn);
+    }
+
+
+
 
 
     public void addEventReceiver(TaskEventReceiver receiver) {
@@ -112,6 +149,12 @@ public class TaskManager {
     private void notifySummarySheetOpened(SummarySheet summarySheet) {
         for (TaskEventReceiver receiver : eventReceivers) {
             receiver.updateSummarySheetOpened(summarySheet);
+        }
+    }
+
+    private void notifySummarySheetDeleted(SummarySheet summarySheet) {
+        for (TaskEventReceiver receiver : eventReceivers) {
+            receiver.updateSummarySheetDeleted(summarySheet);
         }
     }
 
@@ -144,5 +187,18 @@ public class TaskManager {
             receiver.updateAssignTask(task, turn, cook, quantity, time, portions);
         }
     }
+
+    private void notifyPreparationsOptimized(Task task, Cook cook, Turn turn) {
+        for (TaskEventReceiver receiver : eventReceivers) {
+            receiver.updatePreparationsOptimized(currentSummarySheet, task, cook, turn);
+        }
+    }
+    private void notifyPreparationsVerified(Task task, Cook cook, Turn turn) {
+        for (TaskEventReceiver receiver : eventReceivers) {
+            receiver.updatePreparationsVerified(currentSummarySheet, task, cook, turn);
+        }
+    }
+
+
 
 }
