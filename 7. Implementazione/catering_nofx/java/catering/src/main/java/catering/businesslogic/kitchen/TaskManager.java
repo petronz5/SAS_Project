@@ -8,6 +8,7 @@ import catering.businesslogic.recipe.Recipe;
 import catering.businesslogic.turns.Cook;
 import catering.businesslogic.turns.Turn;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class TaskManager {
@@ -72,10 +73,17 @@ public class TaskManager {
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             throw new UseCaseLogicException();
         }
+
+        // Verifica che il compito non sia completato
+        if (task.isCompleted()) {
+            throw new UseCaseLogicException();
+        }
+
         Task modifiedTask = currentSummarySheet.modifyTask(task, portions, quantity, time);
         this.notifyTaskModified(modifiedTask);
         return modifiedTask;
     }
+
 
     public void deleteAssignment(Task task, Cook cook, Turn turn) throws UseCaseLogicException {
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
@@ -89,6 +97,14 @@ public class TaskManager {
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             throw new UseCaseLogicException();
         }
+        if (turn.getExpirationDate() != null && turn.getExpirationDate().toLocalDate().isBefore(LocalDate.now())) {
+            throw new UseCaseLogicException();
+        }
+
+        if (!turn.containsCook(cook)) {
+            throw new UseCaseLogicException();
+        }
+
         Task assignedTask = currentSummarySheet.assignTask(task, turn, cook, quantity, portions, time);
         this.notifyTaskAssigned(assignedTask, turn, cook, quantity, portions , time);
         return assignedTask;
@@ -100,14 +116,28 @@ public class TaskManager {
     }
 
     public Task regCompletedTask(Task task) throws UseCaseLogicException {
+        // Controlla se l'utente corrente è uno chef
+        if (!CatERing.getInstance().getUserManager().getCurrentUser().isChef()) {
+            throw new UseCaseLogicException();
+        }
+
+        // Verifica che il foglio riepilogativo corrente e il task siano validi
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             throw new UseCaseLogicException();
         }
-        task.setCompleted(true); // Imposta il completamento della task
-        Task.saveModifiedTask(task); // Salva il cambiamento nel database
-        this.notifyTaskCompleted(task); // Notifica l'evento
+
+        // Imposta il task come completato
+        task.setCompleted(true);
+
+        // Salva il cambiamento nel database
+        Task.saveModifiedTask(task);
+
+        // Notifica agli observer il completamento del task
+        this.notifyTaskCompleted(task);
+
         return task;
     }
+
 
     public void optimizePreparations(Task task, Cook cook, Turn turn) throws UseCaseLogicException {
         if (currentSummarySheet == null) {
@@ -118,7 +148,6 @@ public class TaskManager {
     }
 
 
-
     public void verifyPreparations(Task task, Cook cook, Turn turn) throws UseCaseLogicException {
         if (currentSummarySheet == null) {
             throw new UseCaseLogicException();
@@ -126,9 +155,6 @@ public class TaskManager {
         currentSummarySheet.verifyPreparations(task, cook, turn);
         this.notifyPreparationsVerified(task, cook, turn);
     }
-
-
-
 
 
     public void addEventReceiver(TaskEventReceiver receiver) {

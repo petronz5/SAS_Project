@@ -16,6 +16,8 @@ public class Task {
     private String quantity;
     private int estimatedTime;
     private boolean completed;
+    private ArrayList<Turn> involvedTurns = new ArrayList<>();
+    private ArrayList<Cook> involvedCooks = new ArrayList<>();
 
     private Recipe recipe;
 
@@ -58,6 +60,14 @@ public class Task {
         this.quantity = quantity;
     }
 
+    public ArrayList<Cook> getInvolvedCooks() {
+        return involvedCooks;
+    }
+
+    public ArrayList<Turn> getInvolvedTurns() {
+        return involvedTurns;
+    }
+
     public int getEstimatedTime() {
         return estimatedTime;
     }
@@ -87,6 +97,19 @@ public class Task {
         Task.saveModifiedTask(this);
         return this;
     }
+
+    public void addCook(Cook cook) {
+        if (cook != null && !this.involvedCooks.contains(cook)) {
+            this.involvedCooks.add(cook);
+        }
+    }
+
+    public void addTurn(Turn turn) {
+        if (turn != null && !this.involvedTurns.contains(turn)) {
+            this.involvedTurns.add(turn);
+        }
+    }
+
 
 
     // -------------------------------------

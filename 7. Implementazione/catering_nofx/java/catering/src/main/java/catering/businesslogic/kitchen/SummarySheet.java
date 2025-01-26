@@ -50,12 +50,22 @@ public class SummarySheet {
         return task;
     }
 
-    public Task modifyTask(Task task, Integer portions,  String quantity, Integer time) {
+    public Task modifyTask(Task task, Integer portions, String quantity, Integer time) {
         task.setQuantity(quantity);
         if (time != null) task.setEstimatedTime(time);
         if (portions != null) task.setPortions(portions);
+
+        // Gestione dei turni e dei cuochi
+        if (task.getInvolvedTurns() != null) {
+            task.getInvolvedTurns().clear();
+        }
+        if (task.getInvolvedCooks() != null) {
+            task.getInvolvedCooks().clear();
+        }
+
         return task;
     }
+
 
     public static void deleteSummarySheet(int sheetId) {
         String deleteQuery = "DELETE FROM catering.SummarySheets WHERE id = ?";
@@ -68,11 +78,9 @@ public class SummarySheet {
     }
 
     public void sortPreparations(Map<String, Object> parameters) {
-        // Esempio di criterio di ordinamento basato sul tempo stimato
         if (parameters.containsKey("sortBy") && parameters.get("sortBy").equals("estimatedTime")) {
             myTasks.sort((t1, t2) -> Integer.compare(t1.getEstimatedTime(), t2.getEstimatedTime()));
         }
-        // Puoi aggiungere altri criteri di ordinamento in base ai parametri
         System.out.println("Preparations sorted based on criteria: " + parameters);
     }
 
@@ -89,42 +97,47 @@ public class SummarySheet {
     public void optimizePreparations(Task task, Cook cook, Turn turn) {
         if (task != null) {
             System.out.println("Optimizing specific task: " + task.getId());
+            if (cook != null) {
+                System.out.println("Assigning cook: " + cook.getId());
+            }
+            if (turn != null) {
+                System.out.println("Assigning turn: " + turn.getId());
+            }
         } else {
-            // Ottimizzazione globale
             myTasks.sort((t1, t2) -> Integer.compare(t1.getEstimatedTime(), t2.getEstimatedTime()));
+            for (Task t : myTasks) {
+                if (!t.isCompleted()) {
+                    System.out.println("Consolidating task: " + t.getId());
+                } else {
+                    System.out.println("Task already completed: " + t.getId());
+                }
+            }
         }
         System.out.println("Preparations optimized.");
     }
 
     public void verifyPreparations(Task task, Cook cook, Turn turn) {
         if (task != null) {
-            // Verifica di un compito specifico
+            // Verifica specifica
             if (task.getEstimatedTime() <= 0 || task.getPortions() <= 0) {
-                System.out.println("Invalid task found: " + task.getId());
+                myTasks.remove(task); // Rimuove il task non valido
+                System.out.println("Invalid task removed: " + task.getId());
             } else {
+                if (cook != null) task.addCook(cook);
+                if (turn != null) task.addTurn(turn);
                 System.out.println("Task is valid: " + task.getId());
             }
         } else {
             // Verifica globale
-            boolean allValid = true;
-            for (Task t : myTasks) {
-                if (t.getEstimatedTime() <= 0 || t.getPortions() <= 0) {
-                    System.out.println("Invalid task found: " + t.getId());
-                    allValid = false;
-                }
-            }
-            if (allValid) {
-                System.out.println("All preparations are valid.");
-            } else {
-                System.out.println("Some preparations failed verification.");
-            }
+            myTasks.removeIf(t -> t.getEstimatedTime() <= 0 || t.getPortions() <= 0);
+            System.out.println("Invalid tasks removed.");
         }
+        System.out.println("Preparations verified.");
     }
 
 
 
     public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer portions, Integer time) {
-        // Assign task logic (shift, cook)
         task.setQuantity(quantity);
         task.setEstimatedTime(time);
         task.setPortions(portions);
