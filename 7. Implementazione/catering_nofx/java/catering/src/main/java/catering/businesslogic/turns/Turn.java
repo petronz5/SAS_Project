@@ -137,12 +137,18 @@ public class Turn {
         String query = "SELECT * FROM catering.Turns WHERE id = " + turnId;
 
         PersistenceManager.executeQuery(query, rs -> {
-            // NON serve if (rs.next()). Siamo già dentro un while esterno
+            // Log di debug
+            System.out.println("Tentativo di caricamento Turn con ID=" + turnId);
+            String preparationPlace = rs.getString("preparation_place");
+            Time startTime = rs.getTime("start_time");
+            Time endTime = rs.getTime("end_time");
+            System.out.println("Preparation Place: " + preparationPlace + ", Start Time: " + startTime + ", End Time: " + endTime);
+
             Turn t = new Turn(
                     rs.getDate("expiration_date"),
-                    rs.getString("preparation_place"),
-                    rs.getTime("start_time"),
-                    rs.getTime("end_time"),
+                    preparationPlace,
+                    startTime,
+                    endTime,
                     rs.getBoolean("recurrence"),
                     rs.getInt("staff_limit"),
                     rs.getInt("current_staff"),
@@ -152,8 +158,13 @@ public class Turn {
             turnRef.set(t);
         });
 
+        if (turnRef.get() == null) {
+            System.err.println("Turn con ID=" + turnId + " non trovato.");
+        }
+
         return turnRef.get();
     }
+
 
 
     @Override

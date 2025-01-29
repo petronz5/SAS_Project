@@ -10,7 +10,6 @@ import catering.businesslogic.turns.Turn;
 import catering.persistence.BatchUpdateHandler;
 import catering.persistence.PersistenceManager;
 import catering.persistence.ResultHandler;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -66,12 +65,10 @@ public class SummarySheet {
         return task;
     }
 
-
     public static void deleteSummarySheet(int sheetId) {
         String deleteQuery = "DELETE FROM catering.SummarySheets WHERE id = ?";
         PersistenceManager.executeUpdate(deleteQuery, ps -> ps.setInt(1, sheetId));
     }
-
 
     public void deleteAssignment(Task task, Cook cook, Turn turn) {
         this.myTasks.remove(task);
@@ -135,8 +132,6 @@ public class SummarySheet {
         System.out.println("Preparations verified.");
     }
 
-
-
     public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer portions, Integer time) {
         task.setQuantity(quantity);
         task.setEstimatedTime(time);
@@ -164,19 +159,21 @@ public class SummarySheet {
     }
 
     public static SummarySheet loadSummarySheet(ServiceInfo service, EventInfo event) {
-        SummarySheet sheet = null;
-        String query = "SELECT * FROM catering.SummarySheets WHERE service_id = ? AND event_id = ?";
-        PersistenceManager.executeQuery(query, ps -> {
-            ps.setInt(1, service.getId());
-            ps.setInt(2, event.getId());
-        }, rs -> {
+        SummarySheet[] sheetHolder = {null}; // Usa un array per evitare problemi di finalità
+
+        // Incorpora i parametri direttamente nella query
+        String query = "SELECT * FROM catering.SummarySheets WHERE service_id = " + service.getId() + " AND event_id = " + event.getId();
+        PersistenceManager.executeQuery(query, rs -> {
             if (rs.next()) {
-                sheet = new SummarySheet();
+                SummarySheet sheet = new SummarySheet();
                 sheet.id = rs.getInt("id");
                 sheet.referredService = service;
                 sheet.referredEvent = event;
+                sheetHolder[0] = sheet; // Assegna il valore all'array
             }
         });
+
+        SummarySheet sheet = sheetHolder[0]; // Recupera l'oggetto dall'array
 
         if (sheet != null) {
             sheet.myTasks = Task.loadTasksForSheet(sheet.id);
@@ -184,14 +181,18 @@ public class SummarySheet {
         return sheet;
     }
 
-
     public static SummarySheet loadSummarySheetById(int sheetId){
         SummarySheet sheet = new SummarySheet();
         String query = "SELECT * FROM catering.SummarySheets WHERE id = " + sheetId;
+
         PersistenceManager.executeQuery(query, rs -> {
-            sheet.id = rs.getInt("id");
+            if (rs.next()) {
+                sheet.id = rs.getInt("id");
+                // Imposta altri campi di sheet se necessario
+            }
         });
 
+        // Carica i task associati
         sheet.myTasks = Task.loadTasksForSheet(sheet.id);
         return sheet;
     }

@@ -8,6 +8,7 @@ import catering.persistence.ResultHandler;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Task {
     private int id;
@@ -110,8 +111,6 @@ public class Task {
         }
     }
 
-
-
     // -------------------------------------
     // PERSISTENCE METHODS
     // -------------------------------------
@@ -124,7 +123,6 @@ public class Task {
                 "(summary_sheet_id, recipe_id, portions, quantity, estimated_time, completed) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
 
-        // Eseguiamo un singolo INSERT
         try (
                 Connection conn = DriverManager.getConnection(
                         "jdbc:mysql://localhost:8889/catering?serverTimezone=UTC",
@@ -134,7 +132,7 @@ public class Task {
                 PreparedStatement ps = conn.prepareStatement(insertSQL, PreparedStatement.RETURN_GENERATED_KEYS)
         ) {
             // Log di debug
-            System.out.println("Eseguo INSERT singolo (NON batch) con i seguenti valori:");
+            System.out.println("Eseguo INSERT singolo con i seguenti valori:");
             System.out.println("summary_sheet_id: " + task.getSummarySheetId());
             System.out.println("recipe_id: " + task.getRecipe().getId());
             System.out.println("portions: " + task.getPortions());
@@ -151,7 +149,12 @@ public class Task {
             ps.setBoolean(6, task.isCompleted());
 
             // Eseguiamo l'INSERT
-            ps.executeUpdate();
+            int rowsInserted = ps.executeUpdate();
+
+            // Debug: Verifica se l'INSERT è avvenuto
+            if (rowsInserted == 0) {
+                throw new SQLException("Task non inserita, nessuna riga aggiunta!");
+            }
 
             // Recuperiamo l'ID generato
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -160,6 +163,7 @@ public class Task {
                     System.out.println("Generated Task ID: " + task.id);
                 } else {
                     System.out.println("Generated ID not found in getGeneratedKeys().");
+                    throw new SQLException("Errore nel recupero dell'ID della Task.");
                 }
             }
 
@@ -168,7 +172,7 @@ public class Task {
         }
 
         // Se non è stato assegnato alcun ID, solleviamo eccezione
-        if (task.id == 0) {
+        if (task.id <= 0) {
             throw new IllegalStateException("Task ID is not generated properly");
         }
     }
@@ -249,17 +253,20 @@ public class Task {
         String query = "SELECT * FROM catering.Tasks WHERE summary_sheet_id = " + sheetId;
 
         PersistenceManager.executeQuery(query, rs -> {
-            // Carichiamo i campi
-            Task task = new Task(null);  // Recipe non caricata qui, se vuoi, la puoi caricare con loadRecipeById
+            int recipeId = rs.getInt("recipe_id");
+            Recipe rec = Recipe.loadRecipeById(recipeId);
+            if (rec == null) {
+                System.err.println("Recipe con ID=" + recipeId + " non trovata per Task ID=" + rs.getInt("id"));
+                return;
+            }
+
+            Task task = new Task(rec);
             task.id = rs.getInt("id");
+            task.summarySheetId = rs.getInt("summary_sheet_id");
             task.portions = rs.getInt("portions");
             task.quantity = rs.getString("quantity");
             task.estimatedTime = rs.getInt("estimated_time");
             task.completed = rs.getBoolean("completed");
-            // Se serve recipe:
-            // int recipeId = rs.getInt("recipe_id");
-            // Recipe rec = Recipe.loadRecipeById(recipeId);
-            // task.setRecipe(rec);
 
             tasks.add(task);
         });

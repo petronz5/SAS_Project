@@ -46,4 +46,14 @@ public class TaskPersistence implements TaskEventReceiver {
     public void updateAssignTask(Task task, Turn turn, Cook cook, String quantity, int time, int portions) {
         Task.saveAssignedTask(task, turn, cook, quantity, time, portions);
     }
+
+    @Override
+    public void updatePreparationsOptimized(SummarySheet sumSheet, Task task, Cook cook, Turn turn) {
+
+    }
+
+    @Override
+    public void updatePreparationsVerified(SummarySheet sumSheet, Task task, Cook cook, Turn turn) {
+
+    }
 }

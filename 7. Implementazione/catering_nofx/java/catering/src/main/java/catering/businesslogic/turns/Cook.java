@@ -48,13 +48,23 @@ public class Cook {
         String query = "SELECT * FROM catering.Cooks WHERE id = " + cookId;
 
         PersistenceManager.executeQuery(query, rs -> {
-            // NON fare if (rs.next()), perché siamo già dentro un while(rs.next()) esterno
-            Cook c = new Cook(rs.getString("name"), rs.getInt("badge"));
+            // Log di debug
+            System.out.println("Tentativo di caricamento Cook con ID=" + cookId);
+            String name = rs.getString("name");
+            int badge = rs.getInt("badge");
+            System.out.println("Nome Cook: " + name + ", Badge: " + badge);
+
+            Cook c = new Cook(name, badge);
             c.setId(rs.getInt("id"));
             cookRef.set(c);
         });
 
-        return cookRef.get();  
+        if (cookRef.get() == null) {
+            System.err.println("Cook con ID=" + cookId + " non trovato.");
+        }
+
+        return cookRef.get();
     }
+
 
 }
