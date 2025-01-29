@@ -5,9 +5,9 @@ import catering.businesslogic.turns.Cook;
 import catering.businesslogic.turns.Turn;
 
 public interface TaskEventReceiver {
-    void updateSummarySheetCreated(SummarySheet sumSheet);
-    void updateSummarySheetOpened(SummarySheet sumSheet);
-    void updateSummarySheetDeleted(SummarySheet sumSheet);
+    void updateSummarySheetCreated(SummarySheet summary);
+    void updateSummarySheetOpened(SummarySheet summary);
+    void updateSummarySheetDeleted(SummarySheet summary);
     void updateAddedTask(Task task);
     void updateModifyTask(Task task);
     void updateRegCompletedTask(Task task);

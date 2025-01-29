@@ -28,6 +28,9 @@ public class Task {
         this.quantity = "";
         this.estimatedTime = 0;
         this.completed = false;
+
+        this.involvedCooks = new ArrayList<>();
+        this.involvedTurns = new ArrayList<>();
     }
 
     // -------------------------------------
@@ -50,8 +53,12 @@ public class Task {
     }
 
     public void setPortions(int portions) {
+        if (portions < 0) {
+            throw new IllegalArgumentException("Le porzioni non possono essere negative.");
+        }
         this.portions = portions;
     }
+
 
     public String getQuantity() {
         return quantity;
@@ -98,6 +105,7 @@ public class Task {
         Task.saveModifiedTask(this);
         return this;
     }
+
 
     public void addCook(Cook cook) {
         if (cook != null && !this.involvedCooks.contains(cook)) {

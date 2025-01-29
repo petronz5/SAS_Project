@@ -1,5 +1,7 @@
 package catering.businesslogic.event;
 
+import catering.businesslogic.UseCaseLogicException;
+
 import java.util.ArrayList;
 
 public class EventManager {
@@ -17,4 +19,12 @@ public class EventManager {
 
         return allServices;
     }
+    public EventInfo getCurrentEvent() throws UseCaseLogicException {
+        ArrayList<EventInfo> events = getEventInfo();
+        if (events.isEmpty()) {
+            throw new UseCaseLogicException();
+        }
+        return events.get(0);  // Seleziona il primo evento (oppure gestisci meglio la selezione)
+    }
+
 }

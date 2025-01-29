@@ -10,6 +10,7 @@ import catering.businesslogic.turns.Turn;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class TaskManager {
     private SummarySheet currentSummarySheet;
@@ -52,15 +53,15 @@ public class TaskManager {
         return summarySheet;
     }
 
-    public void deleteSummarySheet(SummarySheet summarySheet) throws UseCaseLogicException {
-        if (summarySheet == null || !summarySheet.getTasks().isEmpty()) {
+    public void deleteSummarySheet(SummarySheet summary) throws UseCaseLogicException {
+        if (summary == null || !summary.getTasks().isEmpty()) {
             throw new UseCaseLogicException();
         }
-        SummarySheet.deleteSummarySheet(summarySheet.getId());
-        if (currentSummarySheet == summarySheet) {
+        SummarySheet.deleteSummarySheet(summary.getId());
+        if (currentSummarySheet == summary) {
             currentSummarySheet = null;
         }
-        this.notifySummarySheetDeleted(summarySheet);
+        this.notifySummarySheetDeleted(summary);
     }
 
     public Task addTask(Recipe recipe) throws UseCaseLogicException {
@@ -68,56 +69,136 @@ public class TaskManager {
             System.err.println("Errore: currentSummarySheet è NULL nel TaskManager!");
             throw new UseCaseLogicException();
         }
+        if (!CatERing.getInstance().getUserManager().getCurrentUser().isChef()) {
+            throw new UseCaseLogicException();
+        }
 
         System.out.println("Aggiunta nuova Task alla scheda ID=" + currentSummarySheet.getId());
-        return currentSummarySheet.addTask(recipe);
+
+        // Creazione della Task
+        Task task = currentSummarySheet.addTask(recipe);
+
+        // Recupera il numero di partecipanti (diners) dall'evento corrente
+        int diners = CatERing.getInstance().getEventManager().getCurrentEvent().getDiners();
+        if (diners > 0) {
+            task.setPortions(diners);
+        }
+
+        // Notifica la creazione della Task agli observer
+        this.notifyTaskAdded(task);
+
+        return task;
+    }
+
+    public void sortTasks(Map<String, Object> criteria) throws UseCaseLogicException {
+        if (currentSummarySheet == null) {
+            throw new UseCaseLogicException();
+        }
+
+        currentSummarySheet.sortPreparations(criteria);
+        System.out.println("Sorting completed based on criteria: " + criteria);
     }
 
     public Task modifyTask(Task task, String quantity, Integer time, Integer portions) throws UseCaseLogicException {
+        // Controlla se l'utente corrente è uno chef
+        if (!CatERing.getInstance().getUserManager().getCurrentUser().isChef()) {
+            throw new UseCaseLogicException();
+        }
+
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             throw new UseCaseLogicException();
         }
 
-        // Verifica che il compito non sia completato
-        if (task.isCompleted()) {
-            throw new UseCaseLogicException();
+        // ALT: Controllo sui turni (turn != null && turn.perfDate > LocalDate.now())
+        if (task.getInvolvedTurns() != null) {
+            for (Turn turn : task.getInvolvedTurns()) {
+                if (turn.getExpirationDate() != null && turn.getExpirationDate().toLocalDate().isBefore(LocalDate.now())) {
+                    throw new UseCaseLogicException();
+                }
+            }
         }
 
+        // ALT: Controllo sui cuochi assegnati (cook != null && turn.containsCook(cook))
+        if (task.getInvolvedCooks() != null) {
+            for (Cook cook : task.getInvolvedCooks()) {
+                boolean cookInTurn = false;
+                for (Turn turn : task.getInvolvedTurns()) {
+                    if (turn.containsCook(cook)) {
+                        cookInTurn = true;
+                        break;
+                    }
+                }
+                if (!cookInTurn) {
+                    throw new UseCaseLogicException();
+                }
+            }
+        }
+
+        // Modifica la task nel SummarySheet
         Task modifiedTask = currentSummarySheet.modifyTask(task, portions, quantity, time);
+
+        // Notifica agli observer la modifica della task
         this.notifyTaskModified(modifiedTask);
         return modifiedTask;
     }
 
+
     public void deleteAssignment(Task task, Cook cook, Turn turn) throws UseCaseLogicException {
+        // Controlla se l'utente corrente è uno chef
+        if (!CatERing.getInstance().getUserManager().getCurrentUser().isChef()) {
+            throw new UseCaseLogicException();
+        }
+
+        // Controlla se il SummarySheet è valido
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             throw new UseCaseLogicException();
         }
+
+        // Rimuove l'assegnazione nel SummarySheet
         currentSummarySheet.deleteAssignment(task, cook, turn);
+
+        // Notifica agli observer
         this.notifyTaskDeleted(task);
     }
 
+
     public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer portions, Integer time) throws UseCaseLogicException {
         System.out.println("Verifica Task nel SummarySheet...");
+
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             System.out.println("Errore: La Task non è presente nel SummarySheet.");
             throw new UseCaseLogicException();
         }
 
-        System.out.println("Verifica scadenza del Turn...");
-        System.out.println("Expiration Date del Turn: " + turn.getExpirationDate());
-        if (turn.getExpirationDate() != null && turn.getExpirationDate().toLocalDate().isBefore(LocalDate.now())) {
-            System.out.println("Errore: Il Turn è già scaduto.");
+        // Controllo se l'utente è Chef
+        if (!CatERing.getInstance().getUserManager().getCurrentUser().isChef()) {
             throw new UseCaseLogicException();
         }
 
-        System.out.println("Verifica Cook nel Turn...");
-        if (!turn.containsCook(cook)) {
-            System.out.println("Errore: Il Cook non è assegnato al Turn.");
+        // Controllo se il turno è valido
+        if (turn != null && turn.getExpirationDate() != null && turn.getExpirationDate().toLocalDate().isBefore(LocalDate.now())) {
             throw new UseCaseLogicException();
         }
 
+        // Controllo se il cuoco è assegnato al turno
+        if (cook != null && !turn.containsCook(cook)) {
+            throw new UseCaseLogicException();
+        }
+
+        // Assegnazione della task nel SummarySheet
         Task assignedTask = currentSummarySheet.assignTask(task, turn, cook, quantity, portions, time);
-        this.notifyTaskAssigned(assignedTask, turn, cook, quantity, portions , time);
+
+        // Aggiunta dei turni e dei cuochi come mostrato nel DSD
+        if (turn != null) {
+            assignedTask.addTurn(turn);
+        }
+        if (cook != null) {
+            assignedTask.addCook(cook);
+        }
+
+        // Notifica agli observer
+        this.notifyTaskAssigned(assignedTask, turn, cook, quantity, portions, time);
+
         return assignedTask;
     }
 
@@ -137,16 +218,13 @@ public class TaskManager {
             throw new UseCaseLogicException();
         }
 
-        // Imposta il task come completato
-        task.setCompleted(true);
-
-        // Salva il cambiamento nel database
-        Task.saveModifiedTask(task);
+        // Chiamata al metodo in SummarySheet
+        Task completedTask = currentSummarySheet.regCompletedTask(task);
 
         // Notifica agli observer il completamento del task
-        this.notifyTaskCompleted(task);
+        this.notifyTaskCompleted(completedTask);
 
-        return task;
+        return completedTask;
     }
 
     public void optimizePreparations(Task task, Cook cook, Turn turn) throws UseCaseLogicException {
@@ -174,21 +252,21 @@ public class TaskManager {
     }
 
     // Notifiche agli observer
-    private void notifySummarySheetCreated(SummarySheet summarySheet) {
+    private void notifySummarySheetCreated(SummarySheet summary) {
         for (TaskEventReceiver receiver : eventReceivers) {
-            receiver.updateSummarySheetCreated(summarySheet);
+            receiver.updateSummarySheetCreated(summary);
         }
     }
 
-    private void notifySummarySheetOpened(SummarySheet summarySheet) {
+    private void notifySummarySheetOpened(SummarySheet summary) {
         for (TaskEventReceiver receiver : eventReceivers) {
-            receiver.updateSummarySheetOpened(summarySheet);
+            receiver.updateSummarySheetOpened(summary);
         }
     }
 
-    private void notifySummarySheetDeleted(SummarySheet summarySheet) {
+    private void notifySummarySheetDeleted(SummarySheet summary) {
         for (TaskEventReceiver receiver : eventReceivers) {
-            receiver.updateSummarySheetDeleted(summarySheet);
+            receiver.updateSummarySheetDeleted(summary);
         }
     }
 

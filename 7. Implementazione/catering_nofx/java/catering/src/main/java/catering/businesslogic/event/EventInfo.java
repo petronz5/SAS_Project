@@ -33,9 +33,13 @@ public class EventInfo implements EventItemInfo {
         return this.services;
     }
 
-    public int getDiners(){
-        return this.participants;   // Restituisce il numero di partecipani all'eventos
+    public int getDiners() {
+        if (this.services != null && !this.services.isEmpty()) {
+            return this.services.get(0).getDiners();  // Prende il numero di partecipanti dal primo servizio
+        }
+        return this.participants; // Se non ci sono servizi, usa il numero di partecipanti dell'evento
     }
+
 
     public String toString() {
         return name + ": " + dateStart + "-" + dateEnd + ", " + participants + " pp. (" + organizer.getUserName() + ")";

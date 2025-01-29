@@ -45,16 +45,27 @@ public class SummarySheet {
     public Task addTask(Recipe recipe) {
         Task task = new Task(recipe);
         task.setSummarySheetId(this.id);
+        task.setCompleted(false);
+
+        // Inizializza le porzioni con 0 (sarà aggiornato successivamente in TaskManager)
+        task.setPortions(0);
+
         this.myTasks.add(task);
         return task;
     }
 
-    public Task modifyTask(Task task, Integer portions, String quantity, Integer time) {
-        task.setQuantity(quantity);
-        if (time != null) task.setEstimatedTime(time);
-        if (portions != null) task.setPortions(portions);
 
-        // Gestione dei turni e dei cuochi
+    public Task modifyTask(Task task, Integer portions, String quantity, Integer time) {
+        if (quantity != null) {
+            task.setQuantity(quantity);
+        }
+        if (time != null) {
+            task.setEstimatedTime(time);
+        }
+        if (portions != null) {
+            task.setPortions(portions);
+        }
+
         if (task.getInvolvedTurns() != null) {
             task.getInvolvedTurns().clear();
         }
@@ -65,14 +76,24 @@ public class SummarySheet {
         return task;
     }
 
+
+    public Task regCompletedTask(Task task) {
+        // Chiama il metodo della Task per completarla
+        return task.regCompletedTask();
+    }
+
+
     public static void deleteSummarySheet(int sheetId) {
         String deleteQuery = "DELETE FROM catering.SummarySheets WHERE id = ?";
         PersistenceManager.executeUpdate(deleteQuery, ps -> ps.setInt(1, sheetId));
     }
 
     public void deleteAssignment(Task task, Cook cook, Turn turn) {
-        this.myTasks.remove(task);
+        if (task != null) {
+            this.myTasks.remove(task);
+        }
     }
+
 
     public void sortPreparations(Map<String, Object> parameters) {
         if (parameters.containsKey("sortBy") && parameters.get("sortBy").equals("estimatedTime")) {
@@ -133,9 +154,18 @@ public class SummarySheet {
     }
 
     public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer portions, Integer time) {
-        task.setQuantity(quantity);
-        task.setEstimatedTime(time);
-        task.setPortions(portions);
+        if (quantity != null) task.setQuantity(quantity);
+        if (time != null) task.setEstimatedTime(time);
+        if (portions != null) task.setPortions(portions);
+
+        // Assegnazione del cuoco e del turno
+        if (turn != null) {
+            task.addTurn(turn);
+        }
+        if (cook != null) {
+            task.addCook(cook);
+        }
+
         return task;
     }
 
