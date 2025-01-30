@@ -13,6 +13,6 @@ public interface TaskEventReceiver {
     void updateRegCompletedTask(Task task);
     void updateDeleteAssignment(Task task);
     void updateAssignTask(Task task, Turn turn, Cook cook, String quantity, int time, int portions);
-    void updatePreparationsOptimized(SummarySheet sumSheet, Task task, Cook cook, Turn turn);
-    void updatePreparationsVerified(SummarySheet sumSheet, Task task, Cook cook, Turn turn);
+    void updatePreparationsOptimized(SummarySheet summary, Task task, Cook cook, Turn turn);
+    void updatePreparationsVerified(SummarySheet summary, Task task, Cook cook, Turn turn);
 }

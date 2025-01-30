@@ -106,6 +106,14 @@ public class Task {
         return this;
     }
 
+    public void verifyAndUpdate(Cook cook, Turn turn) {
+        if (cook != null) {
+            this.addCook(cook);
+        }
+        if (turn != null) {
+            this.addTurn(turn);
+        }
+    }
 
     public void addCook(Cook cook) {
         if (cook != null && !this.involvedCooks.contains(cook)) {

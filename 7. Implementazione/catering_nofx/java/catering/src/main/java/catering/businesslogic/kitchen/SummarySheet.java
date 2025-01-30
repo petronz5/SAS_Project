@@ -137,21 +137,20 @@ public class SummarySheet {
 
     public void verifyPreparations(Task task, Cook cook, Turn turn) {
         if (task != null) {
-            // Verifica specifica
+            // Verifica se la Task è valida
             if (task.getEstimatedTime() <= 0 || task.getPortions() <= 0) {
-                myTasks.remove(task); // Rimuove il task non valido
-                System.out.println("Invalid task removed: " + task.getId());
+                myTasks.remove(task);  // Rimuove task non valide
+                System.out.println("Task rimossa perché non valida: " + task.getId());
             } else {
-                if (cook != null) task.addCook(cook);
-                if (turn != null) task.addTurn(turn);
-                System.out.println("Task is valid: " + task.getId());
+                // SummarySheet ora chiama un metodo specifico di Task per aggiornare cook e turn
+                task.verifyAndUpdate(cook, turn);
+                System.out.println("Preparazione verificata per Task ID: " + task.getId());
             }
         } else {
-            // Verifica globale
+            // Se task è null, verifica tutte le task
             myTasks.removeIf(t -> t.getEstimatedTime() <= 0 || t.getPortions() <= 0);
-            System.out.println("Invalid tasks removed.");
+            System.out.println("Rimosse tutte le task non valide.");
         }
-        System.out.println("Preparations verified.");
     }
 
     public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer portions, Integer time) {
