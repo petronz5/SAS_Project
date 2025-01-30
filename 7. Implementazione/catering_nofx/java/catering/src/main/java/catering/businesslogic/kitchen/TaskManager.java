@@ -228,10 +228,20 @@ public class TaskManager {
     }
 
     public void optimizePreparations(Task task, Cook cook, Turn turn) throws UseCaseLogicException {
+        if (!CatERing.getInstance().getUserManager().getCurrentUser().isChef()) {
+            throw new UseCaseLogicException();
+        }
+
         if (currentSummarySheet == null) {
             throw new UseCaseLogicException();
         }
+
+        if (task != null && !currentSummarySheet.getTasks().contains(task)) {
+            throw new UseCaseLogicException();
+        }
+
         currentSummarySheet.optimizePreparations(task, cook, turn);
+
         this.notifyPreparationsOptimized(task, cook, turn);
     }
 

@@ -122,6 +122,7 @@ public class SummarySheet {
                 System.out.println("Assigning turn: " + turn.getId());
             }
         } else {
+            // Se nessuna task è specificata, ordiniamo tutte
             myTasks.sort((t1, t2) -> Integer.compare(t1.getEstimatedTime(), t2.getEstimatedTime()));
             for (Task t : myTasks) {
                 if (!t.isCompleted()) {

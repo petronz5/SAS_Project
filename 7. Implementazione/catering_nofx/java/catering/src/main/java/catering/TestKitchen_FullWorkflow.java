@@ -82,8 +82,9 @@ public class TestKitchen_FullWorkflow {
             System.out.println("Task assegnata: " + assignedTask);
 
             // 8) Segna la Task come completata
-            Task completedTask = CatERing.getInstance().getTaskMgr().regCompletedTask(Task);
+            Task completedTask = CatERing.getInstance().getTaskMgr().regCompletedTask(assignedTask);
             System.out.println("Task completata: " + completedTask);
+
 
         } catch (UseCaseLogicException e) {
             System.err.println("UseCaseLogicException: " + e.getMessage());
