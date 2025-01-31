@@ -115,6 +115,45 @@ public class Task {
         }
     }
 
+    public Task modifyTask(String quantity, Integer time, Integer portions) {
+        if (quantity != null) {
+            this.quantity = quantity;
+        }
+        if (time != null) {
+            this.estimatedTime = time;
+        }
+        if (portions != null) {
+            this.portions = portions;
+        }
+
+        this.involvedCooks.clear();
+        this.involvedTurns.clear();
+
+        return this;
+    }
+
+    public Task assignTask(Turn turn, Cook cook, String quantity, Integer portions, Integer time) {
+        if (quantity != null) {
+            this.quantity = quantity;
+        }
+        if (time != null) {
+            this.estimatedTime = time;
+        }
+        if (portions != null) {
+            this.portions = portions;
+        }
+
+        if (turn != null) {
+            this.addTurn(turn);
+        }
+        if (cook != null) {
+            this.addCook(cook);
+        }
+
+        return this;
+    }
+
+
     public void addCook(Cook cook) {
         if (cook != null && !this.involvedCooks.contains(cook)) {
             this.involvedCooks.add(cook);

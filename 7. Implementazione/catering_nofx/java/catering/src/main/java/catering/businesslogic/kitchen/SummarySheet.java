@@ -56,24 +56,7 @@ public class SummarySheet {
 
 
     public Task modifyTask(Task task, Integer portions, String quantity, Integer time) {
-        if (quantity != null) {
-            task.setQuantity(quantity);
-        }
-        if (time != null) {
-            task.setEstimatedTime(time);
-        }
-        if (portions != null) {
-            task.setPortions(portions);
-        }
-
-        if (task.getInvolvedTurns() != null) {
-            task.getInvolvedTurns().clear();
-        }
-        if (task.getInvolvedCooks() != null) {
-            task.getInvolvedCooks().clear();
-        }
-
-        return task;
+        return task.modifyTask(quantity, time, portions);
     }
 
 
@@ -154,19 +137,7 @@ public class SummarySheet {
     }
 
     public Task assignTask(Task task, Turn turn, Cook cook, String quantity, Integer portions, Integer time) {
-        if (quantity != null) task.setQuantity(quantity);
-        if (time != null) task.setEstimatedTime(time);
-        if (portions != null) task.setPortions(portions);
-
-        // Assegnazione del cuoco e del turno
-        if (turn != null) {
-            task.addTurn(turn);
-        }
-        if (cook != null) {
-            task.addCook(cook);
-        }
-
-        return task;
+        return task.assignTask(turn, cook, quantity, portions, time);
     }
 
     // STATIC METHODS FOR PERSISTENCE
