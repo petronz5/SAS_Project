@@ -33,9 +33,7 @@ public class Task {
         this.involvedTurns = new ArrayList<>();
     }
 
-    // -------------------------------------
     // GETTERS & SETTERS
-    // -------------------------------------
     public int getSummarySheetId() {
         return summarySheetId;
     }
@@ -166,9 +164,8 @@ public class Task {
         }
     }
 
-    // -------------------------------------
+
     // PERSISTENCE METHODS
-    // -------------------------------------
 
     /**
      * Salva una nuova Task su DB, usando executeUpdate() e recuperando la chiave generata

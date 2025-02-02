@@ -47,7 +47,6 @@ public class SummarySheet {
         task.setSummarySheetId(this.id);
         task.setCompleted(false);
 
-        // Inizializza le porzioni con 0 (sarà aggiornato successivamente in TaskManager)
         task.setPortions(0);
 
         this.myTasks.add(task);
@@ -61,7 +60,6 @@ public class SummarySheet {
 
 
     public Task regCompletedTask(Task task) {
-        // Chiama il metodo della Task per completarla
         return task.regCompletedTask();
     }
 

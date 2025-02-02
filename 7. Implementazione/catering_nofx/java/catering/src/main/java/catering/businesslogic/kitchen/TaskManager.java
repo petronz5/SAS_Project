@@ -78,13 +78,11 @@ public class TaskManager {
         // Creazione della Task
         Task task = currentSummarySheet.addTask(recipe);
 
-        // Recupera il numero di partecipanti (diners) dall'evento corrente
         int diners = CatERing.getInstance().getEventManager().getCurrentEvent().getDiners();
         if (diners > 0) {
             task.setPortions(diners);
         }
 
-        // Notifica la creazione della Task agli observer
         this.notifyTaskAdded(task);
 
         return task;
@@ -134,10 +132,8 @@ public class TaskManager {
             }
         }
 
-        // Modifica la task nel SummarySheet
         Task modifiedTask = currentSummarySheet.modifyTask(task, portions, quantity, time);
 
-        // Notifica agli observer la modifica della task
         this.notifyTaskModified(modifiedTask);
         return modifiedTask;
     }
@@ -149,15 +145,11 @@ public class TaskManager {
             throw new UseCaseLogicException();
         }
 
-        // Controlla se il SummarySheet è valido
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             throw new UseCaseLogicException();
         }
-
-        // Rimuove l'assegnazione nel SummarySheet
         currentSummarySheet.deleteAssignment(task, cook, turn);
 
-        // Notifica agli observer
         this.notifyTaskDeleted(task);
     }
 
@@ -170,22 +162,18 @@ public class TaskManager {
             throw new UseCaseLogicException();
         }
 
-        // Controllo se l'utente è Chef
         if (!CatERing.getInstance().getUserManager().getCurrentUser().isChef()) {
             throw new UseCaseLogicException();
         }
 
-        // Controllo se il turno è valido
         if (turn != null && turn.getExpirationDate() != null && turn.getExpirationDate().toLocalDate().isBefore(LocalDate.now())) {
             throw new UseCaseLogicException();
         }
 
-        // Controllo se il cuoco è assegnato al turno
         if (cook != null && !turn.containsCook(cook)) {
             throw new UseCaseLogicException();
         }
 
-        // Assegnazione della task nel SummarySheet
         Task assignedTask = currentSummarySheet.assignTask(task, turn, cook, quantity, portions, time);
 
         // Aggiunta dei turni e dei cuochi come mostrato nel DSD
@@ -195,8 +183,6 @@ public class TaskManager {
         if (cook != null) {
             assignedTask.addCook(cook);
         }
-
-        // Notifica agli observer
         this.notifyTaskAssigned(assignedTask, turn, cook, quantity, portions, time);
 
         return assignedTask;
@@ -208,20 +194,17 @@ public class TaskManager {
     }
 
     public Task regCompletedTask(Task task) throws UseCaseLogicException {
-        // Controlla se l'utente corrente è uno chef
         if (!CatERing.getInstance().getUserManager().getCurrentUser().isChef()) {
             throw new UseCaseLogicException();
         }
 
-        // Verifica che il foglio riepilogativo corrente e il task siano validi
+        // Verifico che il foglio riepilogativo corrente e il task siano validi
         if (currentSummarySheet == null || !currentSummarySheet.getTasks().contains(task)) {
             throw new UseCaseLogicException();
         }
 
-        // Chiamata al metodo in SummarySheet
         Task completedTask = currentSummarySheet.regCompletedTask(task);
 
-        // Notifica agli observer il completamento del task
         this.notifyTaskCompleted(completedTask);
 
         return completedTask;

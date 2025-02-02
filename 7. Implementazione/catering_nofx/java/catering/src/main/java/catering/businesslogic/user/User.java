@@ -50,7 +50,7 @@ public class User {
         return result;
     }
 
-    // STATIC METHODS FOR PERSISTENCE
+    // METODI STATICI
 
     public static User loadUserById(int uid) {
         if (loadedUsers.containsKey(uid)) return loadedUsers.get(uid);

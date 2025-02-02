@@ -48,7 +48,6 @@ public class Cook {
         String query = "SELECT * FROM catering.Cooks WHERE id = " + cookId;
 
         PersistenceManager.executeQuery(query, rs -> {
-            // Log di debug
             System.out.println("Tentativo di caricamento Cook con ID=" + cookId);
             String name = rs.getString("name");
             int badge = rs.getInt("badge");
