@@ -44,11 +44,11 @@ public class TestKitchen_FullWorkflow {
             // Creiamo manualmente la Task
             Task newTask = new Task(recipe);
             newTask.setSummarySheetId(summarySheetId);
-            newTask.setPortions(5); // Numero di porzioni
-            newTask.setQuantity("1kg"); // Quantità
-            newTask.setEstimatedTime(60); // Tempo stimato
-            newTask.setCompleted(false); // Stato completamento
-            Task.saveNewTask(newTask); // Salvataggio nel database
+            newTask.setPortions(5);
+            newTask.setQuantity("1kg");
+            newTask.setEstimatedTime(60);
+            newTask.setCompleted(false);
+            Task.saveNewTask(newTask);
 
             sheet.getTasks().add(newTask);
 

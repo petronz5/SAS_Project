@@ -105,7 +105,6 @@ public class TestKitchen_AlternateWorkflow {
 
              */
 
-            // 10) Concludi il workflow
             System.out.println("Workflow terminato");
 
         } catch (UseCaseLogicException e) {
